@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/index.js", "use": "@vercel/node" },
+    { "src": "public/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/youtube/(.*)", "dest": "/api/index.js" },
+    { "src": "/api-proxy(.*)", "dest": "/api/index.js" },
+    { "src": "/download/(.*)", "dest": "/api/index.js" },
+    { "src": "/healthz", "dest": "/api/index.js" },
+    { "src": "/(.*\\.(?:css|js|json|png|jpg|jpeg|svg|ico|woff2?|ttf|map))", "dest": "/public/$1" },
+    { "src": "/(.*)", "dest": "/api/index.js" }
+  ]
+}
