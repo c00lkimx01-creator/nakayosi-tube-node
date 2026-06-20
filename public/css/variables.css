@@ -1,0 +1,45 @@
+/* =================== CSS カスタムプロパティ (テーマ) =================== */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #0f0f0f;
+  --text-secondary: #606060;
+  --border-color: #e5e5e5;
+  --hover-color: #f2f2f2;
+  --primary-color: #ff0000;
+  --header-bg: #ffffff;
+  --search-bg: #ffffff;
+  --search-border: #cccccc;
+  --comment-bg: #f2f2f2;
+  --scrollbar-bg: #cccccc;
+  --desc-bg: #f2f2f2;
+  --desc-hover: #e5e5e5;
+  --chip-bg: #f2f2f2;
+  --chip-hover: #e5e5e5;
+  --active-sidebar-bg: #e8e8e8;
+  color-scheme: light;
+  font-family: 'Roboto', 'Noto Sans JP', 'Arial', sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg-color: #0f0f0f;
+  --text-color: #f1f1f1;
+  --text-secondary: #aaaaaa;
+  --border-color: #3f3f3f;
+  --hover-color: #272727;
+  --header-bg: #0f0f0f;
+  --search-bg: #121212;
+  --search-border: #303030;
+  --comment-bg: #1f1f1f;
+  --scrollbar-bg: #3a3a3a;
+  --desc-bg: #1f1f1f;
+  --desc-hover: #272727;
+  --chip-bg: #272727;
+  --chip-hover: #3f3f3f;
+  --active-sidebar-bg: #3f3f3f;
+  color-scheme: dark;
+}
+
+/* =================== スクロールバー =================== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-bg); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }

@@ -1,0 +1,88 @@
+/* =================== スケルトンスクリーン =================== */
+@keyframes sk-shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  row-gap: 40px;
+  width: 100%;
+  margin-top: 16px;
+  justify-items: stretch;
+}
+@media (max-width: 1100px) { .skeleton-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px)  { .skeleton-grid { grid-template-columns: 1fr; } }
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.sk-base,
+.skeleton-thumb,
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    var(--hover-color) 0%,
+    var(--chip-hover) 50%,
+    var(--hover-color) 100%
+  );
+  background-size: 1000px 100%;
+  animation: sk-shimmer 1.6s infinite linear;
+}
+
+.skeleton-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 4px;
+}
+.skeleton-line.short { width: 60%; height: 12px; }
+
+/* ショート用スケルトン (縦長カード) */
+.skeleton-shorts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  width: 100%;
+  margin-top: 16px;
+}
+@media (max-width: 760px) {
+  .skeleton-shorts-row { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+
+.skeleton-short-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.skeleton-short-thumb {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--hover-color) 0%,
+    var(--chip-hover) 50%,
+    var(--hover-color) 100%
+  );
+  background-size: 1000px 100%;
+  animation: sk-shimmer 1.6s infinite linear;
+}
+
+/* ローダーテキスト（スケルトン表示中は非表示） */
+.skeleton-active .loader-spinner-wrap,
+.skeleton-active .spinner-ring,
+.skeleton-active .loader-text,
+.skeleton-active .spinner { display: none !important; }

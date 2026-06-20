@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仲良しTube+</title>
+  <meta name="description" content="Premium + / 仲良しTube+ — YouTube frontend">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/skeleton.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body data-theme="light">
+
+<!-- =================== 赤プログレスバー =================== -->
+<div id="progress-bar"></div>
+
+<!-- =================== ヘッダー =================== -->
+<header>
+  <div class="header-left">
+    <button class="icon-btn" id="hamburger-btn" aria-label="メニュー">
+      <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:currentColor;stroke:none;">
+        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+      </svg>
+    </button>
+    <div class="logo" onclick="navigate('home')">
+      <svg viewBox="0 0 24 24" style="width:28px;height:28px;">
+        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+      </svg>
+      <span class="logo-text">仲良しTube+</span>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <div style="position:relative;width:100%;max-width:600px;">
+      <form id="search-form" class="search-bar" role="search">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="検索"
+          autocomplete="off"
+          aria-label="検索"
+          oninput="showSearchSuggestions()"
+        >
+        <button type="submit" aria-label="検索実行">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none;">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+        </button>
+      </form>
+      <div id="search-suggestions" class="search-suggestions"></div>
+    </div>
+    <button id="voice-search-btn" onclick="startVoiceSearch()" aria-label="音声検索">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;stroke:none;">
+        <path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="header-right">
+    <button class="icon-btn" onclick="toggleTheme()" title="テーマ切り替え" aria-label="テーマ切り替え">
+      <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:currentColor;stroke:none;">
+        <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+      </svg>
+    </button>
+    <button class="icon-btn" onclick="openSettings()" title="設定" aria-label="設定">
+      <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:currentColor;stroke:none;">
+        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- =================== カテゴリバー =================== -->
+<div class="categories-bar" id="categories-bar">
+  <button class="category-chip active" onclick="handleCategorySearch('すべて', this)">すべて</button>
+  <button class="category-chip" onclick="handleCategorySearch('音楽', this)">音楽</button>
+  <button class="category-chip" onclick="handleCategorySearch('ゲーム', this)">ゲーム</button>
+  <button class="category-chip" onclick="handleCategorySearch('アニメ', this)">アニメ</button>
+  <button class="category-chip" onclick="handleCategorySearch('スポーツ', this)">スポーツ</button>
+  <button class="category-chip" onclick="handleCategorySearch('料理', this)">料理</button>
+  <button class="category-chip" onclick="handleCategorySearch('旅行', this)">旅行</button>
+  <button class="category-chip" onclick="handleCategorySearch('DIY', this)">DIY</button>
+  <button class="category-chip" onclick="handleCategorySearch('コメディ', this)">コメディ</button>
+  <button class="category-chip" onclick="handleCategorySearch('ニュース', this)">ニュース</button>
+  <button class="category-chip" onclick="handleCategorySearch('テクノロジー', this)">テクノロジー</button>
+  <button class="category-chip" onclick="handleCategorySearch('Vlog', this)">Vlog</button>
+  <button class="category-chip" onclick="handleCategorySearch('教育', this)">教育</button>
+  <button class="category-chip" onclick="handleCategorySearch('映画', this)">映画</button>
+  <button class="category-chip" onclick="handleCategorySearch('ライブ配信', this)">ライブ配信</button>
+</div>
+
+<!-- =================== サイドバー =================== -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-item active" id="nav-home" onclick="navigate('home')">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>ホーム</span>
+    </div>
+    <div class="sidebar-item" id="nav-shorts" onclick="navigate('shorts')">
+      <svg viewBox="0 0 24 24" style="fill:#ff0000;"><path d="M17.77,10.32l-1.2-.5L18,9.06c1.84-.96,2.53-3.23,1.56-5.06s-3.24-2.53-5.07-1.56L6,6.94c-1.29.68-2.07,2.04-2,3.49.07,1.42.93,2.67,2.22,3.25.03.01,1.2.5,1.2.5L6,14.94c-1.84.96-2.53,3.23-1.56,5.06s3.24,2.53,5.07,1.56l8.5-4.5c1.29-.68,2.06-2.04,1.99-3.49C19.93,12.16,19.08,10.91,17.77,10.32Z"/></svg>
+      <span>ショート</span>
+    </div>
+    <div class="sidebar-item" id="nav-subscriptions" onclick="navigate('subscriptions')">
+      <svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+      <span>登録チャンネル</span>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">マイページ</div>
+    <div class="sidebar-item" id="nav-history" onclick="navigate('history')">
+      <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 9 9H20A8 8 0 1 1 13 3zm-1 5v5.59l3.21 3.2-1.42 1.42L10 14.41V8h2z"/></svg>
+      <span>履歴</span>
+    </div>
+    <div class="sidebar-item" id="nav-playlists" onclick="navigate('playlists')">
+      <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+      <span>再生リスト</span>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">登録チャンネル</div>
+    <div id="sidebar-subscriptions"></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-item" id="nav-settings" onclick="openSettings()">
+      <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+      <span>設定</span>
+    </div>
+  </div>
+  <div id="sidebar-premium-plus">仲良しTube+ v2.0</div>
+</nav>
+
+<!-- =================== メインコンテンツ =================== -->
+<main id="main-content" style="margin-top:112px;">
+
+  <!-- ホーム -->
+  <div id="view-home" class="view active">
+    <div id="first-visit-banner" class="first-visit-banner" style="display:none;">
+      <svg viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+      <div>仲良しTube+ へようこそ！設定でテーマやストリームを変更できます。</div>
+      <button class="fvb-close" onclick="dismissFirstVisitBanner()">閉じる</button>
+    </div>
+
+    <div id="home-shorts" class="home-shorts-section hidden">
+      <div class="home-shorts-title">
+        <svg viewBox="0 0 24 24" style="fill:#ff0000;stroke:none;width:24px;height:24px;"><path d="M17.77,10.32l-1.2-.5L18,9.06c1.84-.96,2.53-3.23,1.56-5.06s-3.24-2.53-5.07-1.56L6,6.94c-1.29.68-2.07,2.04-2,3.49.07,1.42.93,2.67,2.22,3.25.03.01,1.2.5,1.2.5L6,14.94c-1.84.96-2.53,3.23-1.56,5.06s3.24,2.53,5.07,1.56l8.5-4.5c1.29-.68,2.06-2.04,1.99-3.49C19.93,12.16,19.08,10.91,17.77,10.32Z"/></svg>
+        ショート
+      </div>
+      <div class="h-scroll-wrap">
+        <button class="h-scroll-btn prev" onclick="hScroll('home-shorts-container',-1)" aria-label="前へ">
+          <svg viewBox="0 0 24 24"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <div class="home-shorts-scroll" id="home-shorts-container"></div>
+        <button class="h-scroll-btn next" onclick="hScroll('home-shorts-container',1)" aria-label="次へ">
+          <svg viewBox="0 0 24 24"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="home-shorts2" class="home-shorts-section hidden">
+      <div class="home-shorts-title">
+        <svg viewBox="0 0 24 24" style="fill:#ff0000;stroke:none;width:24px;height:24px;"><path d="M17.77,10.32l-1.2-.5L18,9.06c1.84-.96,2.53-3.23,1.56-5.06s-3.24-2.53-5.07-1.56L6,6.94c-1.29.68-2.07,2.04-2,3.49.07,1.42.93,2.67,2.22,3.25.03.01,1.2.5,1.2.5L6,14.94c-1.84.96-2.53,3.23-1.56,5.06s3.24,2.53,5.07,1.56l8.5-4.5c1.29-.68,2.06-2.04,1.99-3.49C19.93,12.16,19.08,10.91,17.77,10.32Z"/></svg>
+        ショート (続き)
+      </div>
+      <div class="h-scroll-wrap">
+        <button class="h-scroll-btn prev" onclick="hScroll('home-shorts2-container',-1)" aria-label="前へ">
+          <svg viewBox="0 0 24 24"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <div class="home-shorts-scroll" id="home-shorts2-container"></div>
+        <button class="h-scroll-btn next" onclick="hScroll('home-shorts2-container',1)" aria-label="次へ">
+          <svg viewBox="0 0 24 24"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="home-grid" class="video-grid"></div>
+    <div id="home-loader" class="loader hidden">
+      <div class="spinner-ring"></div>
+      <span>動画を読み込み中...</span>
+    </div>
+  </div>
+
+  <!-- 検索 -->
+  <div id="view-search" class="view">
+    <div id="search-shorts-section" class="home-shorts-section hidden">
+      <div class="home-shorts-title">
+        <svg viewBox="0 0 24 24" style="fill:#ff0000;stroke:none;width:24px;height:24px;"><path d="M17.77,10.32l-1.2-.5L18,9.06c1.84-.96,2.53-3.23,1.56-5.06s-3.24-2.53-5.07-1.56L6,6.94c-1.29.68-2.07,2.04-2,3.49.07,1.42.93,2.67,2.22,3.25.03.01,1.2.5,1.2.5L6,14.94c-1.84.96-2.53,3.23-1.56,5.06s3.24,2.53,5.07,1.56l8.5-4.5c1.29-.68,2.06-2.04,1.99-3.49C19.93,12.16,19.08,10.91,17.77,10.32Z"/></svg>
+        ショート
+      </div>
+      <div class="home-shorts-scroll" id="search-shorts-container"></div>
+    </div>
+    <div id="search-channels-section" class="search-channels-section hidden"></div>
+    <div id="search-results-list" class="search-results-list"></div>
+    <div id="search-loader" class="loader hidden">
+      <div class="spinner-ring"></div>
+      <span>読み込み中...</span>
+    </div>
+  </div>
+
+  <!-- ショート -->
+  <div id="view-shorts" class="view" style="padding:0;margin:0;">
+    <div class="shorts-full-page" id="shorts-full-page">
+      <div id="shorts-container"></div>
+      <div id="shorts-loader" class="loader" style="color:#fff;">
+        <div class="spinner-ring" style="border-top-color:#fff;"></div>
+        ショート動画を読み込み中...
+      </div>
+    </div>
+  </div>
+
+  <!-- 登録チャンネル -->
+  <div id="view-subscriptions" class="view">
+    <div class="subs-page-header">
+      <svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:var(--primary-color);stroke:none;"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+      <h2>登録チャンネル</h2>
+    </div>
+    <div id="subs-grid"></div>
+  </div>
+
+  <!-- チャンネル -->
+  <div id="view-channel" class="view">
+    <div class="channel-banner-wrap" id="channel-banner-wrap">
+      <canvas id="channel-banner-canvas" class="channel-banner-placeholder" style="display:none;"></canvas>
+      <img id="channel-banner-img" class="channel-banner-img" src="" alt="" style="display:none;"
+           onerror="this.style.display='none';document.getElementById('channel-banner-canvas').style.display='block';">
+    </div>
+    <div class="channel-header-row">
+      <div class="channel-header-icon-wrap">
+        <img src="" class="channel-header-icon" id="channel-page-icon">
+      </div>
+      <div class="channel-header-info">
+        <div class="channel-header-title" id="channel-page-name">チャンネル名</div>
+        <div class="channel-header-handle" id="channel-page-handle">@channel</div>
+        <div class="channel-header-meta" id="channel-page-meta">登録者数 -- • 動画 --件</div>
+        <div class="channel-header-desc" id="channel-page-desc" onclick="this.classList.toggle('expanded')"></div>
+        <div class="channel-action-row">
+          <button class="subscribe-btn" id="channel-subscribe-btn">チャンネル登録</button>
+          <button class="channel-bell-btn" id="channel-bell-btn" style="display:none;">
+            <svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none;width:20px;height:20px;"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          </button>
+          <button class="channel-join-btn" id="channel-join-btn" style="display:none;">メンバーになる</button>
+        </div>
+      </div>
+    </div>
+    <div class="channel-tabs-bar" id="channel-tabs-bar">
+      <button class="channel-tab active" id="ch-tab-home" onclick="switchChannelTab('home')">ホーム</button>
+      <button class="channel-tab" id="ch-tab-shorts" onclick="switchChannelTab('shorts')">ショート</button>
+      <button class="channel-tab" id="ch-tab-videos" onclick="switchChannelTab('videos')">動画</button>
+      <button class="channel-tab" id="ch-tab-live" onclick="switchChannelTab('live')">ライブ</button>
+      <button class="channel-tab" id="ch-tab-playlists" onclick="switchChannelTab('playlists')">再生リスト</button>
+      <div class="channel-search-row">
+        <input type="text" id="channel-search-input" placeholder="チャンネル内検索" onkeydown="if(event.key==='Enter') searchInChannel()">
+        <button onclick="searchInChannel()" style="padding:6px 12px;border-radius:8px;background:var(--chip-bg);border:1px solid var(--border-color);cursor:pointer;">🔍</button>
+      </div>
+    </div>
+    <div id="channel-tab-home" class="channel-featured">
+      <div id="channel-featured-video" style="margin-bottom:16px;"></div>
+      <div class="channel-row">
+        <div class="channel-row-title">最新動画</div>
+        <div id="channel-home-row" class="channel-row-scroll"></div>
+      </div>
+      <div class="channel-row">
+        <div class="channel-row-title">ショート</div>
+        <div id="channel-home-shorts-row" class="channel-row-scroll"></div>
+      </div>
+      <div class="channel-row">
+        <div class="channel-row-title">人気の動画</div>
+        <div id="channel-home-popular-row" class="channel-row-scroll"></div>
+      </div>
+      <div class="channel-row">
+        <div class="channel-row-title">最新動画</div>
+        <div id="channel-home-grid" class="video-grid"></div>
+      </div>
+    </div>
+    <div id="channel-tab-shorts" style="display:none;">
+      <div id="channel-shorts-grid" class="channel-shorts-grid"></div>
+      <div id="channel-shorts-loader" class="loader hidden"><div class="spinner-ring"></div>読み込み中...</div>
+      <button id="channel-shorts-more-btn" onclick="loadMoreChannelShorts()" style="display:none;margin:16px auto;padding:10px 24px;border-radius:20px;background:var(--chip-bg);font-size:14px;cursor:pointer;display:block;text-align:center;">もっと見る</button>
+    </div>
+    <div id="channel-tab-videos" style="display:none;">
+      <div class="channel-filter-bar">
+        <button class="channel-filter-chip active" onclick="setChannelFilter(this,'latest')">最新</button>
+        <button class="channel-filter-chip" onclick="setChannelFilter(this,'popular')">人気</button>
+        <button class="channel-filter-chip" onclick="setChannelFilter(this,'oldest')">古い順</button>
+      </div>
+      <div id="channel-grid" class="video-grid"></div>
+      <div id="channel-loader" class="loader hidden"><div class="spinner-ring"></div>読み込み中...</div>
+    </div>
+    <div id="channel-tab-live" style="display:none;">
+      <div id="channel-live-grid" class="video-grid"></div>
+      <div id="channel-live-loader" class="loader hidden"><div class="spinner-ring"></div>読み込み中...</div>
+    </div>
+    <div id="channel-tab-playlists" style="display:none;">
+      <div id="channel-playlists-list"></div>
+      <div id="channel-playlists-loader" class="loader hidden"><div class="spinner-ring"></div>読み込み中...</div>
+    </div>
+    <div id="channel-tab-collabs" style="display:none;">
+      <div style="padding:40px;color:var(--text-secondary);">コラボレーション動画は取得できません</div>
+    </div>
+  </div>
+
+  <!-- ウォッチ -->
+  <div id="view-watch" class="view">
+    <div class="watch-container">
+      <div class="watch-main">
+        <div id="player-wrapper">
+          <iframe id="yt-player" allow="autoplay; fullscreen" allowfullscreen></iframe>
+        </div>
+
+        <h1 class="video-title-watch" id="watch-title"></h1>
+
+        <div class="watch-channel-row">
+          <img id="watch-channel-icon" src="" alt=""
+               onclick="openChannel(document.getElementById('watch-channel-name').textContent, this.src)"
+               onerror="this.src='https://i.pravatar.cc/80?u=ch'">
+          <div class="watch-channel-info">
+            <div id="watch-channel-name" onclick="openChannel(this.textContent, document.getElementById('watch-channel-icon').src)"></div>
+          </div>
+          <button class="watch-subscribe-btn" id="watch-subscribe-btn" onclick="toggleSubscribeFromWatch()">チャンネル登録</button>
+        </div>
+
+        <div class="watch-actions">
+          <div class="stream-panel-wrap">
+            <button class="action-btn" onclick="toggleStreamPanel(event)">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none;"><path d="M8 5v14l11-7z"/></svg>
+              <span id="stream-label">Nocookie</span> ▾
+            </button>
+            <div class="stream-panel" id="stream-panel">
+              <div class="quality-panel-title">再生方法</div>
+              <div class="stream-option active" data-s="1" onclick="switchStream(1)">
+                <div><div>Nocookie</div><div class="s-desc">標準・安定</div></div>
+              </div>
+              <div class="stream-option" data-s="2" onclick="switchStream(2)">
+                <div><div>Edu</div><div class="s-desc">教育版・Premium対応</div></div>
+              </div>
+              <div class="stream-option" data-s="3" onclick="switchStream(3)">
+                <div><div>Stream</div><div class="s-desc">高速・字幕・5秒スキップ対応</div></div>
+              </div>
+              <div class="stream-option" data-s="4" onclick="switchStream(4)">
+                <div><div>Preview</div><div class="s-desc">音声付きYouTube直埋め込み</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="quality-wrap" id="quality-wrap" style="display:none;">
+            <button class="action-btn" onclick="toggleQualityPanel(event)">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none;"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+              <span id="quality-label">画質</span> ▾
+            </button>
+            <div class="quality-panel" id="quality-panel"></div>
+          </div>
+
+          <div class="download-wrap" id="download-wrap-watch">
+            <button class="action-btn" onclick="toggleDownloadPanel(event,'watch')" title="ダウンロード">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              DL
+            </button>
+            <div class="download-panel" id="download-panel-watch"></div>
+          </div>
+
+          <button class="action-btn" onclick="toggleWatchLoop()" id="loop-btn" title="ループ再生">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none;"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+            ループ
+          </button>
+
+          <button class="action-btn" onclick="toggleTheaterMode()" id="theater-btn" title="シアターモード">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;stroke:none;"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/></svg>
+          </button>
+
+          <button class="action-btn" onclick="openAddToPlaylist()">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none;"><path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zM2 16h8v-2H2v2zm19.5-4.5L23 13l-6.99 7-4.51-4.5L13 14l3.01 3 5.49-5.5z"/></svg>
+            保存
+          </button>
+
+          <button class="action-btn" onclick="shareVideo(window.currentVideoId)">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;stroke:none;"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+            共有
+          </button>
+        </div>
+
+        <div class="video-description" onclick="toggleDescription()">
+          <div class="video-stats">
+            <span id="api-views">---</span> 回視聴 •
+            <span id="api-likes">---</span> 高評価
+            <span id="api-date"></span>
+          </div>
+          <div class="desc-content" id="api-desc">概要欄を読み込み中...</div>
+          <span id="desc-toggle-text">続きを読む</span>
+        </div>
+
+        <div class="comments-section">
+          <div class="comments-header">
+            <span><span id="comment-count">0</span> 件のコメント</span>
+            <button onclick="fetchComments(window.currentVideoId)"
+                    style="margin-left:auto;padding:6px 14px;border-radius:18px;border:1px solid var(--border-color);background:var(--chip-bg);color:var(--text-color);cursor:pointer;font-size:13px;">
+              コメントを読み込む
+            </button>
+          </div>
+          <div id="comments-container"></div>
+        </div>
+      </div>
+
+      <div class="watch-sidebar">
+        <div style="font-weight:bold;margin-bottom:16px;">次の動画</div>
+        <div id="related-videos"></div>
+        <div id="related-loader" class="loader hidden">
+          <div class="spinner-ring"></div>関連動画を読み込み中...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 再生リスト -->
+  <div id="view-playlists" class="view">
+    <h2 style="margin-bottom:20px;">再生リスト</h2>
+    <div style="margin-bottom:16px;display:flex;gap:8px;">
+      <input type="text" id="new-playlist-input" placeholder="新しい再生リスト名"
+             style="flex:1;max-width:300px;padding:8px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-color);color:var(--text-color);">
+      <button onclick="createPlaylistFromInput()"
+              style="padding:8px 16px;border-radius:8px;background:var(--primary-color);color:#fff;border:none;cursor:pointer;">作成</button>
+    </div>
+    <div id="playlists-grid"></div>
+  </div>
+
+  <!-- 再生リスト詳細 -->
+  <div id="view-playlist-detail" class="view">
+    <button onclick="navigate('playlists')" style="margin-bottom:16px;background:none;border:none;color:var(--text-color);cursor:pointer;font-size:14px;">← 戻る</button>
+    <h2 id="playlist-detail-title" style="margin-bottom:20px;">再生リスト</h2>
+    <div id="playlist-detail-grid" class="video-grid"></div>
+  </div>
+
+  <!-- 履歴 -->
+  <div id="view-history" class="view">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h2>視聴履歴</h2>
+      <button onclick="clearHistory()"
+              style="padding:8px 16px;border-radius:8px;border:1px solid var(--border-color);background:var(--chip-bg);color:var(--text-color);cursor:pointer;font-size:14px;">
+        🗑️ 履歴を消去
+      </button>
+    </div>
+    <div id="history-grid" class="video-grid"></div>
+    <div id="history-empty" style="display:none;padding:40px;color:var(--text-secondary);text-align:center;">視聴履歴はまだありません</div>
+  </div>
+
+  <!-- 設定 -->
+  <div id="view-settings" class="view">
+    <div style="max-width:680px;margin:0 auto;padding-top:20px;">
+      <h2 style="font-size:22px;font-weight:bold;margin-bottom:24px;">⚙️ 設定</h2>
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-section-title">ネットワーク</div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">CORSプロキシを利用する</div>
+              <div class="setting-desc">外部APIへの通信時にプロキシを経由します（推奨）</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="nav-setting-proxy" onchange="saveNavSettings()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">外観</div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">ダークテーマ</div>
+              <div class="setting-desc">目に優しい暗い配色</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="nav-setting-theme" onchange="toggleThemeFromNavSettings()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">動画ストリーム（ウォッチページ）</div>
+          <div class="stream-options-grid" id="nav-stream-options">
+            <button class="stream-option-btn" data-val="1" onclick="selectNavStream(1)">Nocookie<span class="s-label">標準・安定</span></button>
+            <button class="stream-option-btn" data-val="2" onclick="selectNavStream(2)">Edu<span class="s-label">教育版・Premium</span></button>
+            <button class="stream-option-btn" data-val="3" onclick="selectNavStream(3)">Stream<span class="s-label">高速・字幕対応</span></button>
+            <button class="stream-option-btn" data-val="4" onclick="selectNavStream(4)">Preview<span class="s-label">YouTube直埋め込み</span></button>
+          </div>
+          <input type="hidden" id="nav-setting-stream" value="1">
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">ショートストリーム</div>
+          <div class="stream-options-grid" id="nav-short-stream-options">
+            <button class="stream-option-btn" data-val="1" onclick="selectNavShortStream(1)">Nocookie<span class="s-label">標準</span></button>
+            <button class="stream-option-btn" data-val="2" onclick="selectNavShortStream(2)">Edu<span class="s-label">教育版</span></button>
+            <button class="stream-option-btn" data-val="3" onclick="selectNavShortStream(3)">Manifest<span class="s-label">高速・直接再生</span></button>
+          </div>
+          <input type="hidden" id="nav-setting-short-stream" value="1">
+          <input type="hidden" id="setting-stream" value="1">
+          <input type="hidden" id="setting-short-stream" value="1">
+          <input type="hidden" id="setting-proxy" value="">
+          <input type="hidden" id="setting-theme" value="">
+          <input type="hidden" id="setting-trend" value="">
+          <input type="hidden" id="nav-setting-trend" value="">
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">登録チャンネル管理</div>
+          <div id="settings-subs-list"></div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">データ</div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">視聴履歴を削除</div>
+              <div class="setting-desc">すべての視聴履歴を消去します</div>
+            </div>
+            <button onclick="clearHistory()"
+                    style="padding:8px 16px;border-radius:8px;background:var(--chip-bg);border:1px solid var(--border-color);cursor:pointer;font-size:13px;">
+              削除
+            </button>
+          </div>
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">ZIPダウンロード</div>
+              <div class="setting-desc">このアプリのソースコードをZIPで取得</div>
+            </div>
+            <a href="/download/zip" download
+               style="padding:8px 16px;border-radius:8px;background:var(--chip-bg);border:1px solid var(--border-color);cursor:pointer;font-size:13px;text-decoration:none;color:var(--text-color);">
+              📦 DL
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ウェルカム -->
+  <div id="view-welcome" class="view">
+    <div class="welcome-view">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--primary-color);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:#fff;"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <div class="welcome-title">仲良しTube+ へようこそ</div>
+      <div class="welcome-subtitle">Invidious API を使用した YouTube フロントエンド</div>
+      <div class="settings-panel" style="text-align:left;margin-bottom:28px;">
+        <div class="settings-section">
+          <div class="settings-section-title">ストリーム設定</div>
+          <div class="stream-options-grid" id="welcome-stream-options">
+            <button class="stream-option-btn selected" data-val="1" onclick="selectWelcomeStream(1)">Nocookie<span class="s-label">標準・安定</span></button>
+            <button class="stream-option-btn" data-val="2" onclick="selectWelcomeStream(2)">Edu<span class="s-label">教育版</span></button>
+            <button class="stream-option-btn" data-val="3" onclick="selectWelcomeStream(3)">Stream<span class="s-label">高速</span></button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">ダークテーマ</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-theme" onchange="toggleThemeFromSettings()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <button class="start-btn" onclick="finishSetup()">はじめる</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- =================== スクリプト =================== -->
+<script src="/js/config.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/router.js"></script>
+<script src="/js/ui.js"></script>
+<script src="/js/player.js"></script>
+<script src="/js/shorts.js"></script>
+<script src="/js/search.js"></script>
+<script src="/js/channel.js"></script>
+<script src="/js/comments.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
