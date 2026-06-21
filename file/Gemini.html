@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemini</title>
+
+<style>
+:root{
+    --bg:#ffffff;
+    --sidebar:#ffffff;
+    --border:#e5e7eb;
+    --text:#202124;
+    --sub:#5f6368;
+    --hover:#f1f3f4;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Google Sans","Segoe UI",sans-serif;
+}
+
+body{
+    background:var(--bg);
+    height:100vh;
+    overflow:hidden;
+}
+
+/* Sidebar */
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    width:72px;
+    height:100vh;
+    background:var(--sidebar);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding-top:16px;
+    gap:18px;
+}
+
+.logo{
+    width:28px;
+    height:28px;
+}
+
+.nav-btn{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.nav-btn:hover{
+    background:var(--hover);
+}
+
+.nav-btn svg{
+    width:22px;
+    height:22px;
+    stroke:#5f6368;
+}
+
+/* Main */
+
+.main{
+    margin-left:72px;
+    width:calc(100% - 72px);
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+}
+
+/* Background Glow */
+
+.main::before{
+    content:"";
+    position:absolute;
+    width:900px;
+    height:900px;
+    background:
+    radial-gradient(
+        circle,
+        rgba(66,133,244,.18) 0%,
+        rgba(66,133,244,.08) 35%,
+        transparent 70%
+    );
+    pointer-events:none;
+}
+
+.content{
+    position:relative;
+    z-index:2;
+    text-align:center;
+}
+
+.title{
+    font-size:52px;
+    font-weight:300;
+    color:#3c4043;
+    margin-bottom:48px;
+}
+
+/* Prompt */
+
+.prompt{
+    width:min(820px,90vw);
+    height:64px;
+    background:white;
+    border:1px solid var(--border);
+    border-radius:32px;
+    display:flex;
+    align-items:center;
+    padding:0 20px;
+    box-shadow:
+    0 1px 2px rgba(0,0,0,.05),
+    0 4px 12px rgba(0,0,0,.04);
+}
+
+.left-btn{
+    width:36px;
+    height:36px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    border-radius:50%;
+}
+
+.left-btn:hover{
+    background:var(--hover);
+}
+
+.left-btn svg{
+    width:20px;
+    height:20px;
+    stroke:#5f6368;
+}
+
+input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:none;
+    font-size:16px;
+    color:#202124;
+    padding:0 12px;
+}
+
+input::placeholder{
+    color:#5f6368;
+}
+
+.actions{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+select{
+    border:none;
+    outline:none;
+    background:none;
+    color:#3c4043;
+    font-size:14px;
+    cursor:pointer;
+}
+
+.icon-btn{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+}
+
+.icon-btn:hover{
+    background:var(--hover);
+}
+
+.icon-btn svg{
+    width:20px;
+    height:20px;
+    stroke:#5f6368;
+}
+
+@media(max-width:768px){
+
+.title{
+    font-size:32px;
+}
+
+.prompt{
+    width:92vw;
+}
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+
+    <!-- Logo -->
+    <svg class="logo" viewBox="0 0 100 100">
+        <defs>
+            <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4285F4"/>
+                <stop offset="50%" stop-color="#8E24AA"/>
+                <stop offset="100%" stop-color="#00C853"/>
+            </linearGradient>
+        </defs>
+        <polygon points="50,5 60,40 95,50 60,60 50,95 40,60 5,50 40,40"
+                 fill="url(#g)"/>
+    </svg>
+
+    <!-- New Chat -->
+    <div class="nav-btn">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+        </svg>
+    </div>
+
+    <!-- Search -->
+    <div class="nav-btn">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-4-4"/>
+        </svg>
+    </div>
+
+    <!-- Menu -->
+    <div class="nav-btn">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </div>
+
+</div>
+
+<div class="main">
+
+    <div class="content">
+
+        <div class="title">
+            Gest、さっそく進めましょう
+        </div>
+
+        <div class="prompt">
+
+            <div class="left-btn">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+            </div>
+
+            <input
+                type="text"
+                placeholder="AI に相談">
+
+            <div class="actions">
+
+                <select>
+                    <option>Flash</option>
+                    <option>Pro</option>
+                </select>
+
+                <div class="icon-btn">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="9" y="3" width="6" height="11" rx="3"/>
+                        <path d="M5 11a7 7 0 0 0 14 0"/>
+                        <path d="M12 18v3"/>
+                    </svg>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

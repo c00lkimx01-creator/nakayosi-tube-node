@@ -1,0 +1,18 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>電卓</title>
+<style>body{margin:0;background:#222;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif}
+.calc{width:300px;background:#333;border-radius:12px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.scr{background:#111;color:#fff;text-align:right;padding:16px;font-size:30px;border-radius:6px;min-height:40px;margin-bottom:12px;overflow:hidden}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+button{padding:18px;font-size:18px;border:0;border-radius:6px;background:#555;color:#fff;cursor:pointer}
+button:hover{background:#666}.op{background:#f90;color:#fff}.eq{background:#28a745}</style></head>
+<body><div class="calc"><div class="scr" id="s">0</div><div class="grid">
+<button onclick="c()">C</button><button onclick="p('/')" class="op">÷</button><button onclick="p('*')" class="op">×</button><button onclick="b()">⌫</button>
+<button onclick="p('7')">7</button><button onclick="p('8')">8</button><button onclick="p('9')">9</button><button onclick="p('-')" class="op">−</button>
+<button onclick="p('4')">4</button><button onclick="p('5')">5</button><button onclick="p('6')">6</button><button onclick="p('+')" class="op">＋</button>
+<button onclick="p('1')">1</button><button onclick="p('2')">2</button><button onclick="p('3')">3</button><button onclick="e()" class="eq" style="grid-row:span 2">=</button>
+<button onclick="p('0')" style="grid-column:span 2">0</button><button onclick="p('.')">.</button>
+</div></div>
+<script>let v='';const s=document.getElementById('s');
+function p(x){v+=x;s.textContent=v}function c(){v='';s.textContent='0'}function b(){v=v.slice(0,-1);s.textContent=v||'0'}
+function e(){try{v=String(Function('"use strict";return('+v+')')());s.textContent=v}catch{s.textContent='Error';v=''}}</script>
+</body></html>

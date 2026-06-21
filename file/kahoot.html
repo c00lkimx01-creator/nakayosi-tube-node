@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kahoot!</title>
+    <style>
+        /* Kahootの標準的なスタイルを再現 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #46178f; /* Kahoot Purple */
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #root {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            color: #ffffff;
+            font-size: 60px;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: -2px;
+        }
+
+        .input-container {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 18px;
+            font-weight: 700;
+            box-sizing: border-box;
+            text-align: center;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background-color: #333333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root">
+        <div class="logo-container">
+            <div class="logo">Kahoot!</div>
+        </div>
+        <div class="input-container">
+            <input type="text" placeholder="Game PIN" aria-label="Game PIN">
+            <button type="button">Enter</button>
+        </div>
+    </div>
+
+</body>
+</html>

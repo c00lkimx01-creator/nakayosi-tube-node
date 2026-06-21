@@ -1,66 +1,91 @@
 /**
- * 仲良しTube+ — Express サーバー
- * - 静的ファイルを /public から配信
- * - すべての未知パスを index.html にフォールバック (History API SPA)
- * - GET /download/zip でソース ZIP を返す
- * - /api/yt/*  で youtubei.js (youtube.js モジュール) を使った自前 YouTube API を提供
- *
- * デプロイ対応: Render / Vercel / CodeSandbox / Railway / Replit
- *   いずれも `process.env.PORT` を見て待ち受け、'0.0.0.0' にバインドする。
+ * 仲良しTube+ — Express サーバー (改良版)
+ * - 静的ファイル配信 + SPA フォールバック
+ * - /api/yt/* : youtubei.js による自前 YouTube API
+ * - /disguise : 偽装 HTML をランダムに返す (file/ と public/disguise/ から選択)
+ * - 簡易 LRU メモリキャッシュで負荷軽減 & 高速化
+ * - Vercel / Render / CodeSandbox / Railway / Replit / ローカル すべて対応
  */
-const express = require('express');
-const path    = require('path');
-const fs      = require('fs');
+'use strict';
+
+const express  = require('express');
+const path     = require('path');
+const fs       = require('fs');
 const archiver = require('archiver');
-const yt      = require('./youtube.js');
+const yt       = require('./youtube.js');
 
-const app  = express();
-/* Render / Railway / Replit / CodeSandbox はすべて PORT を環境変数で渡してくる。
-   ローカル/Vercel(サーバーレス)では未設定なので 3000 にフォールバック。 */
-const PORT = process.env.PORT || 3000;
-const PUBLIC = path.join(__dirname, 'public');
+const app    = express();
+const PORT   = process.env.PORT || 3000;
+const ROOT   = __dirname;
+const PUBLIC = path.join(ROOT, 'public');
+const DISGUISE_DIRS = [
+  path.join(ROOT, 'file'),
+  path.join(PUBLIC, 'disguise'),
+];
 
-/* =================== 静的ファイル配信 =================== */
+/* =================== 簡易キャッシュ =================== */
+const CACHE_TTL = { default: 60_000, search: 90_000, trending: 300_000, video: 180_000, streams: 30_000, comments: 60_000, channel: 600_000 };
+const cache = new Map(); // key -> { data, exp }
+const MAX_CACHE = 300;
+function cacheGet(k) { const v = cache.get(k); if (!v) return null; if (v.exp < Date.now()) { cache.delete(k); return null; } return v.data; }
+function cacheSet(k, data, ttl) { if (cache.size >= MAX_CACHE) cache.delete(cache.keys().next().value); cache.set(k, { data, exp: Date.now() + ttl }); }
+
+/* =================== 静的ファイル =================== */
+app.disable('x-powered-by');
 app.use(express.static(PUBLIC, {
-  maxAge: '1m',                          // 開発中は短め
+  maxAge: '5m',
+  etag: true,
   setHeaders(res, filePath) {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-store');
-    }
-    /* CORS: フォント等のクロスオリジン対応 */
+    if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Access-Control-Allow-Origin', '*');
-  }
+  },
 }));
+
+/* =================== 偽装 (Disguise) =================== */
+function listDisguiseFiles() {
+  const out = [];
+  for (const dir of DISGUISE_DIRS) {
+    try {
+      if (!fs.existsSync(dir)) continue;
+      for (const f of fs.readdirSync(dir)) {
+        if (f.toLowerCase().endsWith('.html') || f.toLowerCase().endsWith('.htm')) {
+          out.push(path.join(dir, f));
+        }
+      }
+    } catch (_) {}
+  }
+  return out;
+}
+
+app.get('/disguise', (req, res) => {
+  const files = listDisguiseFiles();
+  if (!files.length) {
+    return res
+      .status(200)
+      .type('html')
+      .send('<!doctype html><meta charset="utf-8"><title>About:blank</title><body style="font-family:sans-serif;padding:40px;color:#555"><h2>偽装 HTML がありません</h2><p>file/ または public/disguise/ に .html を追加してください。</p></body>');
+  }
+  const pick = files[Math.floor(Math.random() * files.length)];
+  res.setHeader('Cache-Control', 'no-store');
+  res.sendFile(pick);
+});
+
+app.get('/disguise/list', (_req, res) => {
+  res.json(listDisguiseFiles().map(f => path.basename(f)));
+});
 
 /* =================== ZIP ダウンロード =================== */
 app.get('/download/zip', (req, res) => {
-  const name = 'nakaoshi-tube-plus.zip';
   res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
-
+  res.setHeader('Content-Disposition', 'attachment; filename="nakaoshi-tube-plus.zip"');
   const archive = archiver('zip', { zlib: { level: 9 } });
-  archive.on('error', err => {
-    console.error('[zip]', err);
-    if (!res.headersSent) res.status(500).end('ZIP error');
-  });
+  archive.on('error', err => { if (!res.headersSent) res.status(500).end('ZIP error'); console.error(err); });
   archive.pipe(res);
-
-  /* プロジェクト全体を追加 (node_modules / .git 除外) */
-  archive.glob('**/*', {
-    cwd: __dirname,
-    ignore: [
-      'node_modules/**',
-      '.git/**',
-      '*.log',
-      '.env',
-      '*.zip'
-    ]
-  });
+  archive.glob('**/*', { cwd: ROOT, ignore: ['node_modules/**', '.git/**', '*.log', '.env', '*.zip'] });
   archive.finalize();
 });
 
-/* =================== API プロキシ (任意エンドポイント) =================== */
-/* /api-proxy?url=<encoded> — CORS 回避が必要なクライアントのため */
+/* =================== 汎用プロキシ =================== */
 app.get('/api-proxy', async (req, res) => {
   const target = req.query.url;
   if (!target) return res.status(400).json({ error: 'missing url param' });
@@ -68,11 +93,10 @@ app.get('/api-proxy', async (req, res) => {
     const { default: fetch } = await import('node-fetch');
     const upstream = await fetch(decodeURIComponent(target), {
       headers: { 'User-Agent': 'Mozilla/5.0' },
-      timeout: 8000
+      timeout: 8000,
     });
     res.status(upstream.status);
-    const ct = upstream.headers.get('content-type') || 'application/json';
-    res.setHeader('Content-Type', ct);
+    res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
     upstream.body.pipe(res);
   } catch (err) {
@@ -80,15 +104,21 @@ app.get('/api-proxy', async (req, res) => {
   }
 });
 
-/* =================== /api/yt — youtubei.js による自前 YouTube API =================== */
-/*
- * Invidious/Piped の公開インスタンスが落ちている場合のフォールバック、
- * または「Native」ストリームとして直接利用できる自前バックエンド。
- * すべて youtube.js (youtubei.js のラッパー) を経由する。
- */
-function _ytErrorHandler(res, err) {
+/* =================== /api/yt — youtubei.js =================== */
+function _err(res, err) {
   console.error('[api/yt]', err?.message || err);
   res.status(502).json({ error: String(err?.message || err) });
+}
+function _ok(res, data) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json(data);
+}
+async function _cached(key, ttl, producer) {
+  const hit = cacheGet(key);
+  if (hit) return hit;
+  const data = await producer();
+  cacheSet(key, data, ttl);
+  return data;
 }
 
 app.get('/api/yt/search', async (req, res) => {
@@ -96,89 +126,61 @@ app.get('/api/yt/search', async (req, res) => {
   const type = req.query.type === 'channel' ? 'channel' : 'video';
   const page = parseInt(req.query.page, 10) || 1;
   if (!q) return res.status(400).json({ error: 'missing q param' });
-  try {
-    const items = await yt.search(q, { type, page });
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(items);
-  } catch (err) { _ytErrorHandler(res, err); }
+  try { _ok(res, await _cached(`search:${type}:${page}:${q}`, CACHE_TTL.search, () => yt.search(q, { type, page }))); }
+  catch (e) { _err(res, e); }
 });
 
 app.get('/api/yt/suggest', async (req, res) => {
   const q = req.query.q;
   if (!q) return res.json([]);
-  try {
-    const items = await yt.searchSuggestions(q);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(items);
-  } catch (err) { _ytErrorHandler(res, err); }
+  try { _ok(res, await _cached(`sug:${q}`, 600_000, () => yt.searchSuggestions(q))); }
+  catch (e) { _err(res, e); }
 });
 
 app.get('/api/yt/trending', async (req, res) => {
-  try {
-    const items = await yt.getTrending(req.query.region || 'JP');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(items);
-  } catch (err) { _ytErrorHandler(res, err); }
+  const region = req.query.region || 'JP';
+  try { _ok(res, await _cached(`trend:${region}`, CACHE_TTL.trending, () => yt.getTrending(region))); }
+  catch (e) { _err(res, e); }
 });
 
 app.get('/api/yt/video/:id', async (req, res) => {
-  try {
-    const info = await yt.getVideoInfo(req.params.id);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(info);
-  } catch (err) { _ytErrorHandler(res, err); }
+  try { _ok(res, await _cached(`video:${req.params.id}`, CACHE_TTL.video, () => yt.getVideoInfo(req.params.id))); }
+  catch (e) { _err(res, e); }
 });
 
 app.get('/api/yt/streams/:id', async (req, res) => {
-  try {
-    const streams = await yt.getVideoStreams(req.params.id);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(streams);
-  } catch (err) { _ytErrorHandler(res, err); }
+  try { _ok(res, await _cached(`streams:${req.params.id}`, CACHE_TTL.streams, () => yt.getVideoStreams(req.params.id))); }
+  catch (e) { _err(res, e); }
 });
 
 app.get('/api/yt/comments/:id', async (req, res) => {
-  try {
-    const data = await yt.getComments(req.params.id, req.query.sort_by || 'top');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(data);
-  } catch (err) { _ytErrorHandler(res, err); }
+  const sort = req.query.sort_by || 'top';
+  try { _ok(res, await _cached(`cmt:${sort}:${req.params.id}`, CACHE_TTL.comments, () => yt.getComments(req.params.id, sort))); }
+  catch (e) { _err(res, e); }
 });
 
 app.get('/api/yt/channel/:id', async (req, res) => {
-  try {
-    const data = await yt.getChannel(req.params.id);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(data);
-  } catch (err) { _ytErrorHandler(res, err); }
+  try { _ok(res, await _cached(`ch:${req.params.id}`, CACHE_TTL.channel, () => yt.getChannel(req.params.id))); }
+  catch (e) { _err(res, e); }
 });
 
 app.get('/api/yt/channel/:id/videos', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const data = await yt.getChannelVideos(req.params.id, page);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.json(data);
-  } catch (err) { _ytErrorHandler(res, err); }
+  const page = parseInt(req.query.page, 10) || 1;
+  try { _ok(res, await _cached(`chv:${page}:${req.params.id}`, CACHE_TTL.channel, () => yt.getChannelVideos(req.params.id, page))); }
+  catch (e) { _err(res, e); }
 });
 
-/* =================== ヘルスチェック =================== */
-app.get('/healthz', (_, res) => res.json({ ok: true, ts: Date.now() }));
+/* =================== ヘルス =================== */
+app.get('/healthz', (_, res) => res.json({ ok: true, ts: Date.now(), cacheSize: cache.size }));
 
 /* =================== SPA フォールバック =================== */
-app.get('*', (req, res) => {
+app.get('*', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(PUBLIC, 'index.html'));
 });
 
 /* =================== 起動 =================== */
-/* Vercel はサーバーレス関数として `app` を直接 require して使うため、
-   そちらの場合は listen せず module.exports = app のみ行う。
-   Render / Railway / Replit / CodeSandbox / ローカルでは通常通り listen する。 */
 if (!process.env.VERCEL) {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[仲良しTube+] http://localhost:${PORT}`);
-  });
+  app.listen(PORT, '0.0.0.0', () => console.log(`[仲良しTube+] http://localhost:${PORT}`));
 }
-
 module.exports = app;
