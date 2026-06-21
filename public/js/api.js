@@ -134,6 +134,52 @@ async function fetchGoogleVideoStreamsInvidious(videoId) {
   }
 }
 
+/* =================== 自前バックエンド (/api/yt) — youtube.js (youtubei.js) =================== */
+/* Invidious/Piped に依存しない自前 YouTube API。同一オリジンなのでプロキシ不要。 */
+async function fetchFromYtBackend(path, timeoutMs = 8000) {
+  const r = await _fetchWithTimeout(path, timeoutMs);
+  if (!r.ok) {
+    let msg = `HTTP ${r.status}`;
+    try { const j = await r.json(); if (j?.error) msg = j.error; } catch (_) {}
+    throw new Error(msg);
+  }
+  return r.json();
+}
+
+/* ストリームURL (mp4/m4a/hls) — Native ストリーム用 */
+async function fetchNativeStreams(videoId) {
+  return fetchFromYtBackend(`/api/yt/streams/${encodeURIComponent(videoId)}`, 12000);
+}
+
+/* 動画メタデータ (Invidious 互換の形に整形済み) */
+async function fetchNativeVideoInfo(videoId) {
+  return fetchFromYtBackend(`/api/yt/video/${encodeURIComponent(videoId)}`, 10000);
+}
+
+/* 検索 (自前バックエンド版。Invidious が全滅した時のフォールバックにも使える) */
+async function fetchNativeSearch(query, page = 1) {
+  const params = new URLSearchParams({ q: query, page });
+  return fetchFromYtBackend(`/api/yt/search?${params}`, 10000);
+}
+
+/* コメント (自前バックエンド版) */
+async function fetchNativeComments(videoId, sortBy = 'top') {
+  return fetchFromYtBackend(`/api/yt/comments/${encodeURIComponent(videoId)}?sort_by=${sortBy}`, 10000);
+}
+
+/* トレンド (自前バックエンド版) */
+async function fetchNativeTrending(region = 'JP') {
+  return fetchFromYtBackend(`/api/yt/trending?region=${region}`, 10000);
+}
+
+/* チャンネル情報・動画一覧 (自前バックエンド版) */
+async function fetchNativeChannelInfo(channelNameOrId) {
+  return fetchFromYtBackend(`/api/yt/channel/${encodeURIComponent(channelNameOrId)}`, 10000);
+}
+async function fetchNativeChannelVideos(channelNameOrId, page = 1) {
+  return fetchFromYtBackend(`/api/yt/channel/${encodeURIComponent(channelNameOrId)}/videos?page=${page}`, 10000);
+}
+
 /* =================== チャンネル情報取得 =================== */
 async function fetchChannelInfo(channelNameOrId) {
   const bases = getInvidiousFor('channel');

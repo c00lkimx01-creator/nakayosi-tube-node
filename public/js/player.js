@@ -106,7 +106,7 @@ async function switchStream(type) {
 
   /* ストリームボタン UI */
   const lbl = document.getElementById('stream-label');
-  if (lbl) lbl.textContent = type === 1 ? 'Nocookie' : type === 2 ? 'Edu' : type === 3 ? 'Stream' : 'Preview';
+  if (lbl) lbl.textContent = type === 1 ? 'Nocookie' : type === 2 ? 'Edu' : type === 3 ? 'Stream' : type === 5 ? 'Native' : 'Preview';
   document.querySelectorAll('#stream-panel .stream-option').forEach(o => {
     o.classList.toggle('active', parseInt(o.dataset.s) === type);
   });
@@ -157,6 +157,79 @@ async function switchStream(type) {
       if (watchLoopEnabled) url += `&loop=1&playlist=${currentVideoId}`;
       iframe.src = url;
     }
+  } else if (type === 5) {
+    /* Native — 自前バックエンド (youtube.js / youtubei.js) から直接ストリームURLを取得 */
+    await setupNativeStream(currentVideoId);
+  }
+}
+
+/* =================== Native ストリーム (youtube.js バックエンド) =================== */
+async function setupNativeStream(videoId) {
+  const wrapper = document.getElementById('player-wrapper');
+  if (!wrapper) return;
+  wrapper.innerHTML = '<div class="loader-spinner-wrap"><div class="spinner-ring"></div></div>';
+
+  let data;
+  try {
+    data = await fetchNativeStreams(videoId);
+  } catch (e) {
+    console.warn('[Native stream] 取得失敗、Nocookieにフォールバック:', e.message);
+    switchStream(1);
+    return;
+  }
+
+  currentGVAllFormats = [...(data.adaptiveFormats || []), ...(data.formatStreams || [])];
+  wrapper.innerHTML = '';
+
+  if (data.hlsManifestUrl) {
+    const vid = document.createElement('video');
+    vid.style.cssText = 'width:100%;height:100%;background:#000;';
+    vid.controls = true;
+    vid.autoplay = true;
+    wrapper.appendChild(vid);
+    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(data.hlsManifestUrl);
+      hls.attachMedia(vid);
+      hls.on(Hls.Events.ERROR, () => switchStream(1));
+    } else {
+      vid.src = data.hlsManifestUrl;
+    }
+    return;
+  }
+
+  const adaptiveV = (data.adaptiveFormats || []).filter(f => f.url && f.mimeType?.startsWith('video/'));
+  const adaptiveA = (data.adaptiveFormats || []).filter(f => f.url && f.mimeType?.startsWith('audio/'));
+  const combos = (data.formatStreams || []).filter(f => f.url);
+
+  if (adaptiveV.length && adaptiveA.length) {
+    const vid = document.createElement('video');
+    vid.style.cssText = 'width:100%;height:100%;background:#000;';
+    vid.controls = true;
+    vid.autoplay = true;
+    vid.crossOrigin = 'anonymous';
+    wrapper.appendChild(vid);
+    const aud = document.createElement('audio');
+    aud.style.display = 'none';
+    aud.crossOrigin = 'anonymous';
+    wrapper.appendChild(aud);
+    currentGVFormats = adaptiveV;
+    buildQualityPanel(adaptiveV, vid, aud, adaptiveA[0]);
+    const target = adaptiveV.find(f => f.qualityLabel === '360p') || adaptiveV[0];
+    vid.src = target.url;
+    aud.src = adaptiveA[0].url;
+    attachAudioVideoSync(vid, aud);
+    vid.play().catch(() => { vid.muted = true; vid.play(); });
+    document.getElementById('quality-wrap')?.style.setProperty('display', '');
+  } else if (combos.length) {
+    const vid = document.createElement('video');
+    vid.style.cssText = 'width:100%;height:100%;background:#000;';
+    vid.controls = true;
+    vid.autoplay = true;
+    wrapper.appendChild(vid);
+    vid.src = combos[0].url;
+  } else {
+    switchStream(1);
   }
 }
 
